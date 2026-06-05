@@ -1,0 +1,4 @@
+/* Pump-calendar visuals live in the global styles.css. */
+:host {
+  display: block;
+}

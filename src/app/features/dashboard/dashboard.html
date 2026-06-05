@@ -1,0 +1,315 @@
+<div class="controls-bar" [class.scrolled]="scrolled()">
+  <span class="brand">{{ brand }}</span>
+  <div class="control-group date-range-controls">
+    <label for="dateRangeStart">From:</label>
+    <input #startInput type="date" id="dateRangeStart" class="date-input" [min]="firstIso()" [max]="lastIso()" />
+    <label for="dateRangeEnd">To:</label>
+    <input #endInput type="date" id="dateRangeEnd" class="date-input" [min]="firstIso()" [max]="lastIso()" />
+    <button class="btn btn-secondary" (click)="applyDateRange()">Apply Range</button>
+    <button class="btn btn-secondary" (click)="toggleTwoWeeks()">{{ twoWeekLabel() }}</button>
+    <button class="btn btn-secondary" (click)="toggleFourWeeks()">{{ fourWeekLabel() }}</button>
+  </div>
+</div>
+
+<div class="container">
+  <h1>{{ title }}</h1>
+  <p class="subtitle">{{ subtitle() }}</p>
+
+  <p class="disclaimer">
+    <strong>Growthly is a tracking tool, not a medical device.</strong>
+    The charts and AI-generated commentary are for general information only and are
+    not a substitute for professional medical advice, diagnosis, or treatment.
+    Always consult your paediatrician about your child's health and feeding.
+  </p>
+
+  @if (stats$(); as s) {
+    <div class="stats-grid">
+      <div class="stat-card">
+        <div class="stat-label">{{ s.weightGain.label }}</div>
+        <div class="stat-value">{{ s.weightGain.value }}</div>
+        <div class="stat-detail">{{ s.weightGain.detail }}</div>
+      </div>
+      @if (cap().supply) {
+      <div class="stat-card">
+        <div class="stat-label">{{ s.avgProduction.label }}</div>
+        <div class="stat-value">{{ s.avgProduction.value }}</div>
+        <div class="stat-detail">{{ s.avgProduction.detail }}</div>
+      </div>
+      <div class="stat-card stat-card--split">
+        <div class="stat-label">{{ s.dayNight.label }}</div>
+        <div class="stat-split-row">
+          <div class="stat-split-item">
+            <div class="stat-split-label">{{ s.dayNight.primaryLabel }}</div>
+            <div class="stat-value stat-value--sm">{{ s.dayNight.primaryValue }}</div>
+          </div>
+          <div class="stat-split-divider"></div>
+          <div class="stat-split-item">
+            <div class="stat-split-label">{{ s.dayNight.secondaryLabel }}</div>
+            <div class="stat-value stat-value--sm">{{ s.dayNight.secondaryValue }}</div>
+          </div>
+        </div>
+        <div class="stat-detail">{{ s.dayNight.detail }}</div>
+      </div>
+      }
+      @if (cap().formula) {
+      <div class="stat-card">
+        <div class="stat-label">{{ s.formulaFree.label }}</div>
+        <div class="stat-value">{{ s.formulaFree.value }}</div>
+        <div class="stat-detail">{{ s.formulaFree.detail }}</div>
+      </div>
+      }
+      <div class="stat-card stat-card--split">
+        <div class="stat-label">{{ s.milkConsumed.label }}</div>
+        <div class="stat-split-row">
+          <div class="stat-split-item">
+            <div class="stat-split-label">{{ s.milkConsumed.primaryLabel }}</div>
+            <div class="stat-value stat-value--sm">{{ s.milkConsumed.primaryValue }}</div>
+          </div>
+          <div class="stat-split-divider"></div>
+          <div class="stat-split-item">
+            <div class="stat-split-label">{{ s.milkConsumed.secondaryLabel }}</div>
+            <div class="stat-value stat-value--sm">{{ s.milkConsumed.secondaryValue }}</div>
+          </div>
+        </div>
+        <div class="stat-detail">{{ s.milkConsumed.detail }}</div>
+      </div>
+      @if (cap().bmSavings) {
+      <div class="stat-card stat-card--green">
+        <div class="stat-label">{{ s.bmSavings.label }}</div>
+        <div class="stat-value">{{ s.bmSavings.value }}</div>
+        <div class="stat-detail">{{ s.bmSavings.detail }}</div>
+      </div>
+      }
+      <div class="stat-card">
+        <div class="stat-label">{{ s.avgFeedSession.label }}</div>
+        <div class="stat-value">{{ s.avgFeedSession.value }}</div>
+        <div class="stat-detail">{{ s.avgFeedSession.detail }}</div>
+      </div>
+    </div>
+  }
+
+  <app-inference-block key="block_executive_summary" />
+
+  <h2>I. Baby Growth &amp; Development</h2>
+
+  <div>
+    <h3>A. Weekly Weight Progression</h3>
+    <div class="chart-container"><canvas id="weightChart"></canvas></div>
+    <app-inference-block key="block_weight_progression" />
+  </div>
+
+  <div>
+    <h3>B. Weekly Growth Velocity</h3>
+    <div class="chart-container"><canvas id="velocityChart"></canvas></div>
+    <app-inference-block key="block_velocity" />
+    <app-inference-block key="block_velocity_interpretation" />
+  </div>
+
+  <div>
+    <h3>C. Height, Head Circumference, and BMI Progression</h3>
+    <div class="chart-container"><canvas id="heightChart"></canvas></div>
+    <div class="chart-container"><canvas id="headChart"></canvas></div>
+    <div class="chart-container"><canvas id="bmiChart"></canvas></div>
+    <app-inference-block key="block_height_hc" />
+    <app-inference-block key="block_bmi" />
+    <app-inference-block key="block_measurement_anomalies" />
+  </div>
+
+  <div>
+    <h3>D. Weight-for-Length vs WHO Standards</h3>
+    <div class="chart-container"><canvas id="wflChart"></canvas></div>
+    <app-inference-block key="block_weight_for_length" />
+  </div>
+
+  <div>
+    <h3>E. Weight Gain Pattern Analysis</h3>
+    <app-inference-block key="block_weight_gain_patterns" />
+  </div>
+
+  <div>
+    <h3>F. Z-Score Growth Trajectory</h3>
+    <app-inference-block key="block_zscore_trajectory" />
+  </div>
+
+  <h2>II. Baby Feeding &amp; Consumption</h2>
+
+  @if (cap().supply) {
+  <div>
+    <h3>A. Production vs Consumption</h3>
+    <div class="chart-container"><canvas id="productionConsumptionChart"></canvas></div>
+    <app-inference-block key="block_production_consumption" />
+  </div>
+  }
+
+  <div>
+    <h3>B. 24-Hour Circadian Consumption Pattern</h3>
+    <div class="two-col">
+      <div class="chart-container"><canvas id="circadianChart"></canvas></div>
+      <div class="chart-container"><canvas id="circadianActualChart"></canvas></div>
+    </div>
+    <app-inference-block key="block_circadian_pattern" />
+  </div>
+
+  <div>
+    <h3>C. Baby's Hunger Patterns</h3>
+    <app-inference-block key="block_hunger_patterns" />
+  </div>
+
+  <div>
+    <h3>D. Feeding Strategy</h3>
+    <app-inference-block key="block_feeding_strategy" />
+  </div>
+
+  @if (cap().topUp) {
+  <div>
+    <h3>E. Formula Top-Up Status</h3>
+    <div>
+      <h4 class="chart-subtitle">Breastmilk vs Formula on Formula Days</h4>
+      <div class="chart-container"><canvas id="formulaDaysChart"></canvas></div>
+    </div>
+    <app-inference-block key="block_topup_tapering" />
+  </div>
+  }
+
+  @if (cap().cost) {
+  <div>
+    <h3>F. Formula Cost &amp; Breastmilk Savings</h3>
+    @if (costPanel(); as c) {
+      <div class="cost-panel">
+        <div class="cost-summary-row">
+          <div class="cost-stat cost-stat--orange">
+            <div class="cost-stat__label">💸 Formula Spent</div>
+            <div class="cost-stat__value">{{ formatInr(c.totalFormulaCost) }}</div>
+            <div class="cost-stat__sub">
+              {{ c.packsUsed }} pack{{ c.packsUsed !== 1 ? 's' : '' }} {{ c.packsLabel }} × ₹{{ c.packPrice }} ({{ c.packSizeG }}g)
+            </div>
+          </div>
+          <div class="cost-stat cost-stat--green">
+            <div class="cost-stat__label">✅ Net Savings</div>
+            <div class="cost-stat__value">{{ formatInr(c.netSavings) }}</div>
+            <div class="cost-stat__sub">vs feeding 100% formula</div>
+          </div>
+        </div>
+
+        <div class="cost-table-wrap">
+          <table class="cost-table">
+            <thead>
+              <tr>
+                <th>Month</th>
+                <th>Formula Used</th>
+                <th>Formula Cost</th>
+                <th>BM Consumed</th>
+                <th>BM Savings</th>
+              </tr>
+            </thead>
+            <tbody>
+              @for (r of c.rows; track r.label) {
+                <tr [class.cost-row--formula]="r.formulaMl > 0">
+                  <td>{{ r.label }}</td>
+                  @if (r.formulaMl > 0) {
+                    <td>{{ (r.formulaMl | number: '1.0-0') }} ml</td>
+                    <td>{{ formatInr(r.formulaCost) }}</td>
+                  } @else {
+                    <td><span class="cost-zero">—</span></td>
+                    <td><span class="cost-zero">—</span></td>
+                  }
+                  <td>{{ (r.bmMl | number: '1.0-0') }} ml</td>
+                  <td class="cost-savings-cell">{{ formatInr(r.bmSavings) }}</td>
+                </tr>
+              }
+            </tbody>
+            <tfoot>
+              <tr class="cost-total-row">
+                <td>Total</td>
+                <td>{{ (c.totalFormulaMl | number: '1.0-0') }} ml</td>
+                <td>{{ formatInr(c.totalFormulaCost) }}</td>
+                <td>{{ (c.totalBmMl | number: '1.0-0') }} ml</td>
+                <td>{{ formatInr(c.totalBmSavings) }}</td>
+              </tr>
+            </tfoot>
+          </table>
+        </div>
+
+        <p class="cost-note">
+          Pricing basis: {{ c.product }}, {{ c.packSizeG }}g = ₹{{ c.packPrice }}@if (c.sourceNote) { ({{ c.sourceNote }})} ·
+          Yield ~{{ c.packYieldMl }} ml per pack · Cost ≈ ₹{{ c.pricePerMl | number: '1.2-2' }}/ml ·
+          <strong>BM savings</strong> = expressed milk consumed × formula cost rate ·
+          <strong>Net savings</strong> = BM savings − actual formula spend
+        </p>
+      </div>
+    } @else {
+      <div class="cost-loading">Calculating…</div>
+    }
+  </div>
+  }
+
+  @if (cap().supply) {
+  <div>
+    <h3>G. Circadian Optimization</h3>
+    <app-inference-block key="block_circadian_optimization" />
+  </div>
+  }
+
+  <div>
+    <h3>H. Solids Introduction</h3>
+    <app-inference-block key="block_solids" />
+  </div>
+
+  <div>
+    <h3>I. Developmental Feeding Transitions</h3>
+    <app-inference-block key="block_developmental_transitions" />
+  </div>
+
+  @if (cap().supply) {
+  <h2>III. Milk Supply &amp; Production</h2>
+
+  <div>
+    <h3>A. Balance &amp; Stability Analysis</h3>
+    <div class="chart-container"><canvas id="rollingAvgChart"></canvas></div>
+    <app-inference-block key="block_supply_stability" />
+    <app-inference-block key="block_daily_production" />
+  </div>
+
+  <div>
+    <h3>B. Production Trend Acceleration</h3>
+    <app-inference-block key="block_trend_acceleration" />
+  </div>
+
+  <div>
+    <h3>C. Supply Recovery &amp; Resilience</h3>
+    <app-inference-block key="block_recovery_resilience" />
+  </div>
+
+  <div>
+    <h3>D. Pump Frequency Analysis</h3>
+    <app-inference-block key="block_pump_frequency" />
+    <div class="chart-container"><canvas id="pumpFrequencyChart"></canvas></div>
+  </div>
+
+  <div>
+    <h3>E. Day-of-Week Production &amp; Consumption Rhythm</h3>
+    <div class="chart-container"><canvas id="dowRhythmChart"></canvas></div>
+    <app-inference-block key="block_dow_rhythm" />
+  </div>
+
+  <div>
+    <h3>F. Future Pumping Requirements</h3>
+    <app-inference-block key="block_pump_reduction" />
+  </div>
+
+  <div>
+    <h3>G. Daily Pump Frequency Calendar</h3>
+    <div id="pumpCalendarContainer">
+      <app-pump-calendar [data]="pumpCalendarData()" />
+    </div>
+  </div>
+  }
+
+  <h2>V. Medical Assessment</h2>
+
+  <div>
+    <app-inference-block key="block_medical_assessment" />
+    <app-inference-block key="block_integrated_summary" />
+    <app-inference-block key="block_monitoring_recommendations" />
+  </div>
+</div>

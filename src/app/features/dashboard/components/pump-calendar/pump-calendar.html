@@ -1,0 +1,67 @@
+@if (months().length) {
+  <div id="pumpCalendarLegend">
+    <div class="pump-legend">
+      <span class="pump-legend-label">Output / day</span>
+      @for (item of bandLegend; track item.label) {
+        <div class="legend-item">
+          <div class="legend-swatch" [style.background]="item.color"></div>
+          <span>{{ item.label }}</span>
+        </div>
+      }
+      <div class="legend-divider"></div>
+      <div class="legend-item">
+        <div class="legend-swatch" style="background:#e0e0e0;"></div>
+        <span>0 ml</span>
+      </div>
+      <div class="legend-item">
+        <div
+          class="legend-swatch"
+          style="background:repeating-linear-gradient(45deg,#f9f9fb,#f9f9fb 4px,#e5e5ea 4px,#e5e5ea 8px);"
+        ></div>
+        <span>N/A</span>
+      </div>
+    </div>
+  </div>
+
+  <div class="pump-calendar">
+    @for (month of months(); track month.name) {
+      <div class="calendar-month">
+        <div class="calendar-month-header">{{ month.name }}</div>
+        <div class="calendar-grid">
+          <div class="calendar-day-header">S</div>
+          <div class="calendar-day-header">M</div>
+          <div class="calendar-day-header">T</div>
+          <div class="calendar-day-header">W</div>
+          <div class="calendar-day-header">T</div>
+          <div class="calendar-day-header">F</div>
+          <div class="calendar-day-header">S</div>
+
+          @for (cell of month.cells; track $index) {
+            @switch (cell.kind) {
+              @case ('empty') {
+                <div class="calendar-day empty"></div>
+              }
+              @case ('before-tracking') {
+                <div class="calendar-day before-tracking" [title]="cell.title">
+                  {{ cell.day }}
+                  <div class="na-label">N/A</div>
+                </div>
+              }
+              @case ('has-data') {
+                <div class="calendar-day has-data" [style.background-color]="cell.bg" [title]="cell.title">
+                  <div class="day-content">
+                    <span class="day-number-badge" [style.color]="cell.textColor">{{ cell.day }}</span>
+                    <div class="session-count">{{ cell.sessions }}</div>
+                  </div>
+                </div>
+              }
+              @case ('no-data') {
+                <div class="calendar-day no-data" [title]="cell.title">{{ cell.day }}</div>
+              }
+            }
+          }
+        </div>
+      </div>
+    }
+  </div>
+}
