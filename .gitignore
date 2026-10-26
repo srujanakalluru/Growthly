@@ -1,0 +1,8 @@
+node_modules/
+dist/
+.angular/
+
+# Generated from Excel on npm start - not committed except config.js and baby-data.ts stubs
+generated/feeding-data.csv
+generated/sessions-data.csv
+generated/Medical context.txt
